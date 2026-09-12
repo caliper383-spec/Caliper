@@ -1,0 +1,617 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Caliper — Documentation</title>
+<meta name="description" content="Caliper protocol documentation: ERC-4626 vaults over concentrated Uniswap v3 positions on Robinhood Chain. No owner, no upgrade path, no admin keys.">
+<meta property="og:title" content="Caliper — Documentation">
+<meta property="og:description" content="ERC-4626 vaults over concentrated Uniswap v3 positions. Contract reference, policy bounds, security model, fees.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#0B0F12">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' fill='%230B0F12'/%3E%3Cpath d='M4 4v13a3 3 0 0 0 3 3' stroke='%2384A2FF' stroke-width='2.4' fill='none'/%3E%3Cpath d='M20 4v13a3 3 0 0 1-3 3' stroke='%2384A2FF' stroke-width='2.4' fill='none'/%3E%3Ccircle cx='12' cy='13' r='2.8' fill='%2384A2FF'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ground:#0B0F12;
+    --surface:#12171A;
+    --surface-2:#171D21;
+    --accent:#84A2FF;
+    --accent-dim:#5B73C8;
+    --ink:#E7EDEB;
+    --muted:#87918F;
+    --rule:#3A4348;
+    --straw:#C99E1B;
+    --violet:#5B4A8E;
+    --steel:#3C5083;
+    --green:#3FB950;
+    --sans:'Archivo',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+    --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --sheet:50px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;background:var(--ground);color:var(--ink);
+    font-family:var(--sans);font-weight:600;font-size:15px;line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+  }
+  /* drawing-sheet ground: 50px grid at 3.5% */
+  body::before{
+    content:"";position:fixed;inset:0;pointer-events-none;z-index:0;
+    background-image:
+      linear-gradient(to right,rgba(231,237,235,.035) 1px,transparent 1px),
+      linear-gradient(to bottom,rgba(231,237,235,.035) 1px,transparent 1px);
+    background-size:var(--sheet) var(--sheet);
+  }
+  .shell{position:relative;z-index:1;display:grid;grid-template-columns:248px minmax(0,1fr);gap:0;max-width:1360px;margin:0 auto}
+
+  /* ── sidebar ─────────────────────────────────────────── */
+  aside{
+    position:sticky;top:0;align-self:start;height:100vh;overflow-y:auto;
+    border-right:1px solid var(--rule);padding:28px 22px 40px;
+  }
+  .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);margin-bottom:4px}
+  .brand svg{flex:0 0 auto}
+  .wordmark{font-weight:800;letter-spacing:.26em;font-size:13px;text-transform:uppercase}
+  .wordmark i{color:var(--accent);font-style:normal}
+  .kicker{font-family:var(--mono);font-size:10px;letter-spacing:.22em;color:var(--muted);text-transform:uppercase;margin:0 0 26px 34px}
+  nav h4{font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--muted);text-transform:uppercase;font-weight:500;margin:22px 0 8px}
+  nav a{display:block;padding:5px 10px;margin-left:-10px;border-radius:5px;color:var(--muted);text-decoration:none;font-size:13.5px;font-weight:600;border-left:2px solid transparent}
+  nav a:hover{color:var(--ink);background:var(--surface)}
+  nav a.on{color:var(--accent);border-left-color:var(--accent);background:var(--surface)}
+  .aside-foot{margin-top:30px;padding-top:18px;border-top:1px solid var(--rule);font-family:var(--mono);font-size:11px;color:var(--muted)}
+  .aside-foot a{color:var(--accent);text-decoration:none;display:block;margin-bottom:5px}
+  .aside-foot a:hover{text-decoration:underline}
+
+  /* ── content ─────────────────────────────────────────── */
+  main{padding:0 clamp(16px,4vw,56px) 96px;min-width:0}
+  .hero{padding:56px 0 34px;border-bottom:1px solid var(--rule);position:relative}
+  .hero .reg{position:absolute;top:22px;right:0;width:26px;height:26px;border-top:1px solid var(--rule);border-right:1px solid var(--rule)}
+  h1{font-size:clamp(34px,6vw,52px);font-weight:800;letter-spacing:-.02em;line-height:1.05;margin:0 0 6px}
+  h1 em{color:var(--accent);font-style:normal}
+  .spectrum{height:3px;width:210px;max-width:60%;margin:20px 0 22px;
+    background:linear-gradient(90deg,var(--straw),var(--violet) 38%,var(--steel) 68%,var(--rule))}
+  .lede{font-size:17px;color:var(--muted);max-width:62ch;margin:0}
+  .lede strong{color:var(--ink)}
+
+  h2{font-size:25px;font-weight:800;letter-spacing:-.01em;margin:58px 0 4px;padding-top:14px;scroll-margin-top:24px}
+  h2::before{content:attr(data-n);display:block;font-family:var(--mono);font-size:10px;letter-spacing:.22em;color:var(--accent);font-weight:500;margin-bottom:10px}
+  h3{font-size:16px;font-weight:800;margin:32px 0 6px;scroll-margin-top:24px}
+  h3 code{font-size:15px}
+  h4{font-size:13px;font-weight:800;margin:24px 0 6px;color:var(--muted);font-family:var(--mono);letter-spacing:.1em;text-transform:uppercase}
+  p{margin:12px 0;max-width:74ch}
+  a{color:var(--accent)}
+  strong{color:#fff}
+  hr{border:0;border-top:1px solid var(--rule);margin:44px 0}
+
+  /* readout tiles */
+  .readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);margin:26px 0}
+  .readout div{background:var(--ground);padding:16px 18px}
+  .readout b{display:block;font-family:var(--mono);font-size:27px;font-weight:600;letter-spacing:-.02em;line-height:1.1}
+  .readout b.g{color:var(--green)}
+  .readout b.a{color:var(--accent)}
+  .readout span{font-family:var(--mono);font-size:10px;letter-spacing:.18em;color:var(--muted);text-transform:uppercase}
+
+  /* tables */
+  .tw{overflow-x:auto;margin:22px 0;border:1px solid var(--rule)}
+  table{border-collapse:collapse;width:100%;font-size:13.5px;min-width:460px}
+  th{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:500;text-align:left;padding:11px 14px;border-bottom:1px solid var(--rule);background:var(--surface)}
+  td{padding:11px 14px;border-bottom:1px solid rgba(58,67,72,.5);vertical-align:top;color:var(--muted)}
+  td:first-child{color:var(--ink)}
+  tr:last-child td{border-bottom:0}
+  td code,th code{font-size:12.5px}
+
+  /* code */
+  code{font-family:var(--mono);font-size:13px;background:var(--surface);border:1px solid var(--rule);border-radius:4px;padding:1px 5px;color:var(--accent);font-weight:500}
+  pre{background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:16px 18px;overflow-x:auto;margin:18px 0}
+  pre code{background:0;border:0;padding:0;color:var(--ink);font-weight:400;font-size:12.5px;line-height:1.7}
+  pre code .c{color:var(--muted)}
+  pre code .k{color:var(--accent)}
+  pre code .s{color:var(--straw)}
+
+  /* callout */
+  .note{border:1px solid var(--rule);border-left:2px solid var(--accent);background:var(--surface);padding:14px 18px;margin:22px 0;font-size:14px}
+  .note b{font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);display:block;margin-bottom:4px;font-weight:500}
+  .note p{margin:0;color:var(--muted)}
+  .note p strong{color:var(--ink)}
+
+  /* diagram frame */
+  figure{margin:26px 0;border:1px solid var(--rule);background:var(--surface);position:relative}
+  figure .bar{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:9px 14px;border-bottom:1px solid var(--rule);font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+  figure .bar i{font-style:normal;color:var(--accent)}
+  .mermaid{padding:22px 14px;overflow-x:auto;text-align:center;min-height:60px}
+  .mermaid svg{max-width:100%;height:auto}
+  figcaption{padding:0 16px 14px;font-size:12.5px;color:var(--muted);text-align:left}
+
+  .pill{display:inline-block;font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;border:1px solid var(--rule);border-radius:999px;padding:3px 9px;color:var(--muted);margin:0 4px 4px 0}
+  .pill.ok{color:var(--green);border-color:rgba(63,185,80,.4)}
+  .pill.ac{color:var(--accent);border-color:rgba(132,162,255,.4)}
+
+  .addr{font-family:var(--mono);font-size:12px;word-break:break-all}
+  footer{border-top:1px solid var(--rule);margin-top:70px;padding:26px 0 0;display:flex;flex-wrap:wrap;gap:14px;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase}
+  footer a{color:var(--accent);text-decoration:none}
+
+  #toc{display:none}
+  @media (max-width:900px){
+    .shell{grid-template-columns:1fr}
+    aside{position:sticky;top:0;z-index:20;height:auto;border-right:0;border-bottom:1px solid var(--rule);
+      padding:12px 16px;background:var(--ground);display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+    .brand{margin:0;flex:1 1 auto}
+    .kicker{display:none}
+    #toc{display:block;margin-left:auto;background:var(--surface);border:1px solid var(--rule);border-radius:5px;
+      color:var(--muted);font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;
+      padding:7px 11px;cursor:pointer;font-weight:500}
+    #toc[aria-expanded="true"]{color:var(--accent);border-color:var(--accent)}
+    aside nav{display:none;flex:1 1 100%;order:3;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));
+      gap:0 14px;padding:8px 0 12px;border-top:1px solid var(--rule);margin-top:4px}
+    aside.open nav{display:grid}
+    nav h4{grid-column:1/-1;margin:12px 0 4px}
+    .aside-foot{display:none}
+    main{padding:0 16px 70px}
+    .hero{padding:30px 0 24px}
+    h2{margin-top:44px}
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <aside>
+    <a class="brand" href="https://www.caliper.finance">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M3 3v14a4 4 0 0 0 4 4h1" stroke="#84A2FF" stroke-width="2.4" stroke-linecap="square"/>
+        <path d="M21 3v14a4 4 0 0 1-4 4h-1" stroke="#84A2FF" stroke-width="2.4" stroke-linecap="square"/>
+        <path d="M2 6h20" stroke="#3A4348" stroke-width="1.4"/>
+        <path d="M6 6v3M10 6v3M14 6v3M18 6v3" stroke="#3A4348" stroke-width="1.2"/>
+        <circle cx="12" cy="13" r="2.6" fill="#84A2FF"/>
+      </svg>
+      <span class="wordmark">Caliper<i>.</i></span>
+    </a>
+    <p class="kicker">Documentation</p>
+    <button id="toc" aria-expanded="false" aria-controls="nav">Contents</button>
+
+    <nav id="nav">
+      <h4>Protocol</h4>
+      <a href="#overview">Overview</a>
+      <a href="#lifecycle">Vault lifecycle</a>
+      <a href="#architecture">Architecture</a>
+      <h4>Reference</h4>
+      <a href="#vault">CaliperVault</a>
+      <a href="#factory">VaultFactory</a>
+      <a href="#feerouter">FeeRouter</a>
+      <a href="#policy">Policy</a>
+      <h4>Operating</h4>
+      <a href="#security">Security model</a>
+      <a href="#fees">Fees</a>
+      <a href="#keepers">Keepers</a>
+      <h4>Using it</h4>
+      <a href="#deployment">Deployment</a>
+      <a href="#integrate">Integrate</a>
+      <a href="#errors">Errors &amp; events</a>
+    </nav>
+
+    <div class="aside-foot">
+      <a href="https://www.caliper.finance">caliper.finance ↗</a>
+      <a href="https://github.com/caliper383-spec/Caliper">github ↗</a>
+      <a href="https://explorer.testnet.chain.robinhood.com">explorer ↗</a>
+    </div>
+  </aside>
+
+  <main>
+    <header class="hero">
+      <div class="reg"></div>
+      <h1>Liquidity without<br><em>the directional bet.</em></h1>
+      <div class="spectrum"></div>
+      <p class="lede">Caliper is an <strong>ERC-4626 vault holding exactly one concentrated Uniswap v3 position</strong>. Deposit one token; the vault mints a range set by policy, harvests its trading fees, and re-centres when price leaves. No owner, no upgrade path, no admin keys.</p>
+      <div style="margin-top:20px">
+        <span class="pill ac">Robinhood Chain 46630</span>
+        <span class="pill ok">0 admin keys</span>
+        <span class="pill ok">11/11 tests</span>
+        <span class="pill">Solidity 0.8.26</span>
+        <span class="pill">BUSL-1.1</span>
+      </div>
+    </header>
+
+    <h2 id="overview" data-n="01 — Protocol">Overview</h2>
+    <p>A Uniswap v3 liquidity provider earns trading fees, but concentrating liquidity to earn more of them also concentrates exposure: the position is continuously rebalanced <em>against</em> the mover, and the tighter the range, the harder that bites. Caliper's position is that the fee income is the product and the directional exposure is a side effect to be managed.</p>
+    <p>The vault is the smallest complete expression of that. One share token, one concentrated position, one policy that fixes how wide the range is, how far price must run before it re-centres, and how much slippage any single action may cost. Every parameter is written at initialisation and has <strong>no setter</strong> — nobody, including whoever deployed it, can change the rules of a live vault, move a depositor's funds, upgrade the code or pause it.</p>
+
+    <div class="readout">
+      <div><b class="a">±3%</b><span>TWAP band</span></div>
+      <div><b>600s</b><span>TWAP window</span></div>
+      <div><b>10%</b><span>of fees earned</span></div>
+      <div><b>≤300</b><span>bps bounty</span></div>
+      <div><b class="g">0</b><span>admin keys</span></div>
+    </div>
+
+    <figure>
+      <div class="bar"><span>Fig 01 · System overview</span><i>Caliper</i></div>
+      <div class="mermaid">
+flowchart LR
+    U([Depositor]) -->|deposit asset| V[CaliperVault<br/>ERC-4626]
+    V -->|shares| U
+    K([Anyone]) -->|deploy| V
+    K -->|harvest| V
+    K -->|rebalance| V
+    V <-->|mint / increase / collect| NPM[NonfungiblePositionManager]
+    V <-->|swap to range ratio| SR[SwapRouter]
+    NPM --- P[(Uniswap v3 pool)]
+    SR --- P
+    V -->|10% of fees collected| FR[FeeRouter]
+    FR -->|20% referral| R([Referrer])
+    FR -->|remainder| T([Treasury])
+    P -.->|TWAP over 600s| TG{{TwapGuard}}
+    TG -.->|spot within 300 bps, or revert| V
+      </div>
+      <figcaption>Every share-moving path passes the TWAP guard first. The fee split is the only value that ever leaves the vault to a third party, and it is taken from collected fees only.</figcaption>
+    </figure>
+
+    <h2 id="lifecycle" data-n="02 — Protocol">Vault lifecycle</h2>
+    <p>The vault's life is five calls, three of which anyone may make.</p>
+
+    <figure>
+      <div class="bar"><span>Fig 02 · Deposit to deployed range</span><i>sequence</i></div>
+      <div class="mermaid">
+sequenceDiagram
+    autonumber
+    participant D as Depositor
+    participant V as CaliperVault
+    participant G as TwapGuard
+    participant R as SwapRouter
+    participant N as PositionManager
+    D->>V: deposit(assets, receiver)
+    V->>G: check(pool, 600s, 300bps)
+    G-->>V: within band
+    V->>V: cap check, mint shares
+    D-->>V: asset transferred in
+    Note over V: funds sit loose — share price unchanged
+    D->>V: deploy()
+    V->>G: check(pool, 600s, 300bps)
+    V->>R: swap to the ratio the range wants
+    V->>N: mint / increaseLiquidity to this vault
+    V->>V: revert unless totalAssets ≥ before − slippage
+      </div>
+      <figcaption><code>deploy()</code> is permissionless because it can only ever move the vault's own funds into the vault's own position.</figcaption>
+    </figure>
+
+    <h3>1 · <code>deposit(assets, receiver)</code></h3>
+    <p>Checks spot against the TWAP, checks the deposit cap, mints shares at <code>assets × totalSupply / totalAssets</code> — one-for-one while the vault is empty — and takes the tokens. Funds land loose; share price is unchanged either way, because <code>totalAssets()</code> counts loose balances and position principal identically.</p>
+
+    <h3>2 · <code>deploy()</code> <span class="pill ac">permissionless</span></h3>
+    <p>Puts idle balances to work. On the first call it picks a range of <code>widthTicks</code> centred on spot; afterwards it adds to the existing position. Before minting it swaps holdings to the ratio the range actually wants, then mints or increases liquidity. The operation is bounded end to end — if <code>totalAssets()</code> afterwards is below <code>valueBefore</code> less the policy's slippage cap, the call reverts.</p>
+
+    <h3>3 · <code>harvest()</code> <span class="pill ac">permissionless</span></h3>
+    <p>Collects trading fees, sends 10% of the collected amount to the <code>FeeRouter</code>, pays the caller the policy's bounty, and leaves the remainder for the next <code>deploy()</code> to compound. Rate-limited by <code>policy.minInterval</code>. <strong>Principal is never touched by this path</strong> — a position that earned nothing pays nothing.</p>
+
+    <h3>4 · <code>rebalance()</code> <span class="pill ac">permissionless</span></h3>
+    <p>Only callable once spot has left <code>[tickLower, tickUpper]</code> by more than <code>policy.hysteresisTicks</code>, and no sooner than <code>minInterval</code> after the last action. Unwinds the position, re-centres a fresh range on spot, rebalances holdings to the new ratio and mints — <strong>always to the vault, never to the caller</strong>.</p>
+
+    <figure>
+      <div class="bar"><span>Fig 03 · Re-centre decision</span><i>guards</i></div>
+      <div class="mermaid">
+flowchart TD
+    A[rebalance called] --> B{position exists?}
+    B -- no --> X1[revert NoPosition]
+    B -- yes --> C{minInterval elapsed?}
+    C -- no --> X2[revert TooSoon]
+    C -- yes --> D{spot within 300 bps of TWAP?}
+    D -- no --> X3[revert PriceOutOfBand]
+    D -- yes --> E{spot outside range<br/>by more than hysteresis?}
+    E -- no --> X4[revert InRange]
+    E -- yes --> F[burn liquidity]
+    F --> G[re-centre width on spot]
+    G --> H[swap to new ratio]
+    H --> I[mint to the vault]
+    I --> J{value ≥ before − slippage?}
+    J -- no --> X5[revert SlippageExceeded]
+    J -- yes --> K[Rebalanced]
+      </div>
+      <figcaption>Five separate reverts stand between a caller and a re-centre. None of them is a permission check — they are all conditions on the position itself.</figcaption>
+    </figure>
+
+    <h3>5 · <code>redeem(shares, receiver, owner)</code></h3>
+    <p>Burns shares, pulls a proportional slice of liquidity, sells the non-asset leg through the pool under the policy's slippage bound, and pays out in <code>asset</code>.</p>
+
+    <h2 id="architecture" data-n="03 — Protocol">Architecture</h2>
+
+    <figure>
+      <div class="bar"><span>Fig 04 · Clones and shared infrastructure</span><i>EIP-1167</i></div>
+      <div class="mermaid">
+flowchart TD
+    F[VaultFactory<br/><i>immutable impl, permissionless</i>] -->|EIP-1167 clone + initialize<br/>in one transaction| V1[CaliperVault clone]
+    F --> V2[CaliperVault clone]
+    F --> V3[CaliperVault clone]
+    V1 --> FR[FeeRouter<br/><i>immutable treasury</i>]
+    V2 --> FR
+    V3 --> FR
+    V1 -. reads .-> PL[[Policy / PolicyLib]]
+    V1 -. reads .-> TG[[TwapGuard]]
+      </div>
+      <figcaption>Configuration lives in storage rather than immutables so a clone reads its own values. The implementation's constructor marks it initialised, so it can never be configured and mistaken for a live vault.</figcaption>
+    </figure>
+
+    <div class="tw"><table>
+      <thead><tr><th>Contract</th><th>Lines</th><th>Responsibility</th></tr></thead>
+      <tbody>
+        <tr><td><code>CaliperVault.sol</code></td><td>636</td><td>ERC-4626 over exactly one concentrated position. Deposit, redeem, deploy, harvest, rebalance.</td></tr>
+        <tr><td><code>VaultFactory.sol</code></td><td>74</td><td>Clone deployer. One vault per <code>(pool, asset)</code> pair, permissionless, immutable implementation.</td></tr>
+        <tr><td><code>FeeRouter.sol</code></td><td>72</td><td>Where every protocol fee lands. Pull-based accounting, 20% referral share, write-once attribution.</td></tr>
+        <tr><td><code>libraries/Policy.sol</code></td><td>28</td><td>The management rules, and the validation every vault runs at init.</td></tr>
+        <tr><td><code>libraries/TwapGuard.sol</code></td><td>58</td><td>Price-band check on every share-moving path.</td></tr>
+      </tbody>
+    </table></div>
+
+    <h2 id="vault" data-n="04 — Reference">CaliperVault</h2>
+    <h4>ERC-4626 surface</h4>
+    <div class="tw"><table>
+      <thead><tr><th>Function</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td><code>deposit(uint256 assets, address receiver) → shares</code></td><td>TWAP-guarded, cap-enforced.</td></tr>
+        <tr><td><code>redeem(uint256 shares, address receiver, address owner) → assets</code></td><td>TWAP-guarded, honours ERC-20 allowance.</td></tr>
+        <tr><td><code>totalAssets() → uint256</code></td><td>Loose balances + position principal, in <code>asset</code>. Non-asset leg valued <strong>net of the pool fee</strong>; uncollected fees deliberately excluded.</td></tr>
+        <tr><td><code>convertToShares</code> / <code>convertToAssets</code></td><td><code>mulDiv</code> against <code>totalSupply</code>.</td></tr>
+        <tr><td><code>previewDeposit</code> / <code>previewRedeem</code></td><td>Views onto the same maths.</td></tr>
+        <tr><td><code>maxDeposit(address) → uint256</code></td><td>Remaining headroom under <code>cap</code>.</td></tr>
+        <tr><td><code>maxRedeem(address owner) → uint256</code></td><td>The owner's share balance.</td></tr>
+      </tbody>
+    </table></div>
+    <p>Shares are a full ERC-20 — <code>approve</code>, <code>transfer</code>, <code>transferFrom</code>, <code>balanceOf</code>, <code>allowance</code>, <code>totalSupply</code>, <code>name</code>, <code>symbol</code>, <code>decimals</code> — freely transferable, with <code>decimals</code> mirroring the asset.</p>
+
+    <h4>Keeper surface</h4>
+    <div class="tw"><table>
+      <thead><tr><th>Function</th><th>Callable by</th><th>Guard</th></tr></thead>
+      <tbody>
+        <tr><td><code>deploy()</code></td><td>anyone</td><td>TWAP band; end-to-end slippage bound on <code>totalAssets()</code>.</td></tr>
+        <tr><td><code>harvest()</code></td><td>anyone</td><td><code>minInterval</code> since last action.</td></tr>
+        <tr><td><code>rebalance()</code></td><td>anyone</td><td><code>minInterval</code>, TWAP band, and spot outside the range by more than <code>hysteresisTicks</code>.</td></tr>
+      </tbody>
+    </table></div>
+
+    <h4>Public state</h4>
+    <p><code>asset</code> · <code>token0</code> · <code>token1</code> · <code>feeTier</code> · <code>tickSpacing</code> · <code>pool</code> · <code>positionManager</code> · <code>router</code> · <code>feeRouter</code> · <code>cap</code> · <code>policy</code> · <code>tokenId</code> · <code>tickLower</code> · <code>tickUpper</code> · <code>lastActionAt</code>, plus the constants <code>TWAP_WINDOW</code> (600) and <code>TWAP_BAND_BPS</code> (300).</p>
+
+    <h2 id="factory" data-n="05 — Reference">VaultFactory</h2>
+    <pre><code><span class="k">function</span> createVault(
+    address pool,
+    address asset,          <span class="c">// must be token0 or token1 of the pool</span>
+    uint256 cap,            <span class="c">// deposit ceiling, fixed forever</span>
+    Policy <span class="k">calldata</span> policy, <span class="c">// validated against the pool's tickSpacing</span>
+    string <span class="k">calldata</span> name,
+    string <span class="k">calldata</span> symbol
+) <span class="k">external returns</span> (address vault);</code></pre>
+    <p>Reverts with <code>VaultExists()</code> if a vault already exists for that <code>(pool, asset)</code> pair. Also exposes <code>vaultFor(pool, asset)</code>, <code>allVaults(i)</code>, <code>vaultCount()</code>, and the immutables <code>implementation</code>, <code>feeRouter</code>, <code>positionManager</code>, <code>router</code>.</p>
+
+    <h2 id="feerouter" data-n="06 — Reference">FeeRouter</h2>
+    <div class="tw"><table>
+      <thead><tr><th>Function</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td><code>setReferrer(address referrer)</code></td><td>Callable <strong>once</strong> per address, by the referred user only. No self-referral.</td></tr>
+        <tr><td><code>take(address token, address user, uint256 amount)</code></td><td>Pull-based — the caller must have approved first, so accounting cannot be desynced by a bare transfer.</td></tr>
+        <tr><td><code>claim(address token) → amount</code></td><td>Withdraws everything owed to the caller.</td></tr>
+        <tr><td><code>treasury</code></td><td><code>immutable</code>, fixed at construction. No owner, no setter, no sweep.</td></tr>
+      </tbody>
+    </table></div>
+
+    <h2 id="policy" data-n="07 — Reference">Policy</h2>
+    <pre><code><span class="k">struct</span> Policy {
+    int24  widthTicks;      <span class="c">// total width of the range a re-centre mints</span>
+    int24  hysteresisTicks; <span class="c">// how far past the edge before a re-centre is allowed</span>
+    uint32 minInterval;     <span class="c">// seconds between actions</span>
+    uint16 maxSlippageBps;  <span class="c">// bound on the swap, the mint ratio and the round trip</span>
+    bool   compound;        <span class="c">// harvest puts the remainder back in, or pays it out</span>
+    uint16 bountyBps;       <span class="c">// paid to whoever spends the gas, capped by the contract</span>
+}</code></pre>
+    <p><code>PolicyLib.validate</code> runs once, at initialisation, and enforces:</p>
+    <div class="tw"><table>
+      <thead><tr><th>Field</th><th>Bound</th></tr></thead>
+      <tbody>
+        <tr><td><code>widthTicks</code></td><td><code>&gt; 0</code> and an exact multiple of the pool's <code>tickSpacing</code></td></tr>
+        <tr><td><code>hysteresisTicks</code></td><td><code>&gt;= 0</code></td></tr>
+        <tr><td><code>maxSlippageBps</code></td><td><code>&lt; 10_000</code></td></tr>
+        <tr><td><code>bountyBps</code></td><td><code>&lt;= 300</code> (<code>MAX_BOUNTY_BPS</code>)</td></tr>
+      </tbody>
+    </table></div>
+    <div class="note"><b>No setter</b><p>A policy that passes validation is the policy that vault runs under for the rest of its life. There is no path — governance, owner or otherwise — to change it.</p></div>
+
+    <h2 id="security" data-n="08 — Operating">Security model</h2>
+    <p>No contract has an owner. There is no <code>Ownable</code>, no proxy, no upgrade path, no pause switch and no rescue function — the calls that would let anyone move a depositor's money were never written, so there is no key to compromise. <code>test_noOwnerFunctionsExist</code> asserts it.</p>
+    <div class="tw"><table>
+      <thead><tr><th>Bound</th><th>Rule</th></tr></thead>
+      <tbody>
+        <tr><td>TwapGuard</td><td>Every path that mints or burns shares at spot first checks spot sits within <strong>300 bps</strong> of an arithmetic-mean tick over <strong>≥ 600 seconds</strong> of real observed history, or reverts.</td></tr>
+        <tr><td>Policy</td><td>Range width, hysteresis, minimum interval, slippage cap and keeper bounty are written once at initialisation and have no setter.</td></tr>
+        <tr><td>Deposit cap</td><td>Fixed at creation, not raisable.</td></tr>
+        <tr><td>Protocol fee</td><td>10%, taken from <em>fees collected only</em>. No harvest path can reach principal.</td></tr>
+        <tr><td>Bounty</td><td>Capped by the contract at 300 bps of collected fees, however the policy is written.</td></tr>
+        <tr><td>Clones</td><td>Created and initialised in one transaction, so an unconfigured clone never exists in a block.</td></tr>
+        <tr><td>Reentrancy</td><td>Every value-moving entry point is <code>nonReentrant</code>.</td></tr>
+        <tr><td>Share price</td><td><code>totalAssets()</code> excludes uncollected fees, so <code>harvest()</code> cannot move it; the non-asset leg is valued net of the pool fee, so the last redeemer does not eat a shortfall.</td></tr>
+        <tr><td>Rebalance custody</td><td>A re-centre always mints the replacement position back to the vault — never to the caller.</td></tr>
+      </tbody>
+    </table></div>
+
+    <h2 id="fees" data-n="09 — Operating">Fees</h2>
+    <figure>
+      <div class="bar"><span>Fig 05 · Where a collected fee goes</span><i>split</i></div>
+      <div class="mermaid">
+flowchart LR
+    C[Trading fees collected<br/>by harvest] --> B[Keeper bounty<br/>≤ 300 bps]
+    C --> P[Protocol 10%]
+    C --> M[Remainder stays<br/>in the vault]
+    P --> FR[FeeRouter]
+    FR --> RF[Referrer 20%<br/>if one is set]
+    FR --> TR[Treasury]
+    M --> D[deploy compounds it<br/>back into the range]
+      </div>
+      <figcaption>Principal appears nowhere in this diagram. Every arrow starts at fees the position actually earned.</figcaption>
+    </figure>
+    <div class="tw"><table>
+      <thead><tr><th>Cut</th><th>Size</th><th>Taken from</th></tr></thead>
+      <tbody>
+        <tr><td>Protocol</td><td><strong>10%</strong> (<code>PROTOCOL_FEE_BPS = 1_000</code>)</td><td>Trading fees collected by <code>harvest()</code>. Never principal.</td></tr>
+        <tr><td>Referral</td><td><strong>20%</strong> of the protocol cut (<code>REFERRAL_BPS = 2_000</code>)</td><td>The <code>FeeRouter</code> inflow, if the account has a referrer.</td></tr>
+        <tr><td>Keeper bounty</td><td><code>policy.bountyBps</code>, <strong>≤ 300 bps</strong></td><td>The collected amount, paid to whoever spent the gas.</td></tr>
+        <tr><td>Remainder</td><td>everything else</td><td>Stays in the vault; <code>deploy()</code> compounds it back into the range.</td></tr>
+      </tbody>
+    </table></div>
+
+    <h2 id="keepers" data-n="10 — Operating">Keepers</h2>
+    <p>There is no keeper allow-list and no privileged bot. Three calls are open to anyone, and two of them pay:</p>
+    <pre><code><span class="c"># put idle balances to work — no bounty, but it is what compounds your own position</span>
+cast send $VAULT <span class="s">"deploy()"</span> --rpc-url $RPC --account keeper
+
+<span class="c"># collect fees — pays policy.bountyBps of the collected amount</span>
+cast send $VAULT <span class="s">"harvest()"</span> --rpc-url $RPC --account keeper
+
+<span class="c"># re-centre once price has escaped the range past hysteresis</span>
+cast send $VAULT <span class="s">"rebalance()"</span> --rpc-url $RPC --account keeper</code></pre>
+    <p>A keeper can tell whether a call will succeed before spending gas by reading <code>tickLower</code>, <code>tickUpper</code>, <code>lastActionAt</code> and <code>policy</code>, and comparing against the pool's current tick.</p>
+
+    <h2 id="deployment" data-n="11 — Using it">Deployment</h2>
+    <p><strong>Robinhood Chain testnet · chainId 46630</strong></p>
+    <div class="tw"><table>
+      <thead><tr><th>Contract</th><th>Address</th></tr></thead>
+      <tbody>
+        <tr><td><code>vault</code></td><td class="addr"><a href="https://explorer.testnet.chain.robinhood.com/address/0x6Dfe9B4bA8b93767E74139Aa049faDb1091eeEb1">0x6Dfe9B4bA8b93767E74139Aa049faDb1091eeEb1</a></td></tr>
+        <tr><td><code>vaultFactory</code></td><td class="addr"><a href="https://explorer.testnet.chain.robinhood.com/address/0xeBbF968f43D788aAde9041d0405aBdc256C3055D">0xeBbF968f43D788aAde9041d0405aBdc256C3055D</a></td></tr>
+        <tr><td><code>vaultImpl</code></td><td class="addr"><a href="https://explorer.testnet.chain.robinhood.com/address/0x0dff8830c26380d3F6fa11258C8f89847B5a13aE">0x0dff8830c26380d3F6fa11258C8f89847B5a13aE</a></td></tr>
+        <tr><td><code>feeRouter</code></td><td class="addr"><a href="https://explorer.testnet.chain.robinhood.com/address/0x853B3C8daAaE8a0e845c4EACA6fbB33BD48dD15f">0x853B3C8daAaE8a0e845c4EACA6fbB33BD48dD15f</a></td></tr>
+        <tr><td><code>pool</code></td><td class="addr"><a href="https://explorer.testnet.chain.robinhood.com/address/0xa0D9fAa381ac6CDe70D33f163fDcD15E56E42d0D">0xa0D9fAa381ac6CDe70D33f163fDcD15E56E42d0D</a></td></tr>
+        <tr><td><code>positionManager</code></td><td class="addr"><a href="https://explorer.testnet.chain.robinhood.com/address/0x4249252917EA0f09049cD03d0f515746FfF3b90f">0x4249252917EA0f09049cD03d0f515746FfF3b90f</a></td></tr>
+        <tr><td><code>swapRouter</code></td><td class="addr"><a href="https://explorer.testnet.chain.robinhood.com/address/0x00d904c19ae659425dA0a062898e9E6f9362B12F">0x00d904c19ae659425dA0a062898e9E6f9362B12F</a></td></tr>
+        <tr><td><code>uniFactory</code></td><td class="addr"><a href="https://explorer.testnet.chain.robinhood.com/address/0x113860755483b98d9A3340125c0B04a966573c65">0x113860755483b98d9A3340125c0B04a966573c65</a></td></tr>
+        <tr><td><code>weth</code></td><td class="addr"><a href="https://explorer.testnet.chain.robinhood.com/address/0x45BDdB9DC128eE4028FDeB8D35E59672Dae93B85">0x45BDdB9DC128eE4028FDeB8D35E59672Dae93B85</a></td></tr>
+        <tr><td><code>usdc</code></td><td class="addr"><a href="https://explorer.testnet.chain.robinhood.com/address/0xc4849573118Db5Ac414318D4332a6a7cFEE8F90C">0xc4849573118Db5Ac414318D4332a6a7cFEE8F90C</a></td></tr>
+      </tbody>
+    </table></div>
+    <div class="tw"><table>
+      <thead><tr><th>Network</th><th>Value</th></tr></thead>
+      <tbody>
+        <tr><td>Testnet RPC</td><td><code>https://rpc.testnet.chain.robinhood.com</code></td></tr>
+        <tr><td>Testnet chainId</td><td><code>46630</code> (<code>0xb626</code>)</td></tr>
+        <tr><td>Mainnet chainId</td><td><code>4663</code> (<code>0x1237</code>)</td></tr>
+        <tr><td>Explorer</td><td><a href="https://explorer.testnet.chain.robinhood.com">explorer.testnet.chain.robinhood.com</a></td></tr>
+      </tbody>
+    </table></div>
+    <div class="note"><b>Note</b><p><strong>Uniswap v3 is not deployed on the testnet.</strong> The deploy script puts the canonical bytecode down first, then Caliper on top, then seeds one pool.</p></div>
+    <p>Verified end to end on chain: deposit 10 tWETH → <code>deploy()</code> opened position #2 over ticks −198660…−197460 → redeem 5 shares returned the assets.</p>
+
+    <h2 id="integrate" data-n="12 — Using it">Integrate</h2>
+    <h4>Read state</h4>
+    <pre><code>VAULT=0x6Dfe9B4bA8b93767E74139Aa049faDb1091eeEb1
+RPC=https://rpc.testnet.chain.robinhood.com
+
+cast call $VAULT <span class="s">"totalAssets()(uint256)"</span> --rpc-url $RPC
+cast call $VAULT <span class="s">"tickLower()(int24)"</span>    --rpc-url $RPC
+cast call $VAULT <span class="s">"tickUpper()(int24)"</span>    --rpc-url $RPC
+cast call $VAULT <span class="s">"previewDeposit(uint256)(uint256)"</span> 1ether --rpc-url $RPC</code></pre>
+
+    <h4>Deposit from a contract</h4>
+    <pre><code><span class="k">interface</span> ICaliperVault {
+    <span class="k">function</span> asset() <span class="k">external view returns</span> (address);
+    <span class="k">function</span> deposit(uint256 assets, address receiver) <span class="k">external returns</span> (uint256 shares);
+    <span class="k">function</span> redeem(uint256 shares, address receiver, address owner) <span class="k">external returns</span> (uint256 assets);
+    <span class="k">function</span> previewDeposit(uint256 assets) <span class="k">external view returns</span> (uint256);
+    <span class="k">function</span> maxDeposit(address) <span class="k">external view returns</span> (uint256);
+}
+
+IERC20(vault.asset()).approve(address(vault), amount);
+uint256 shares = ICaliperVault(vault).deposit(amount, address(this));</code></pre>
+
+    <h4>Create a vault</h4>
+    <pre><code>Policy memory p = Policy({
+    widthTicks:      1200,  <span class="c">// must divide by the pool's tickSpacing</span>
+    hysteresisTicks: 120,
+    minInterval:     3600,
+    maxSlippageBps:  50,
+    compound:        <span class="k">true</span>,
+    bountyBps:       50     <span class="c">// ≤ 300</span>
+});
+
+address vault = VaultFactory(FACTORY).createVault(
+    POOL, WETH, 1_000 ether, p, <span class="s">"Caliper WETH/USDC"</span>, <span class="s">"cWETH"</span>
+);</code></pre>
+
+    <h2 id="errors" data-n="13 — Using it">Errors &amp; events</h2>
+    <h4>Custom errors</h4>
+    <p><code>AlreadyInitialized</code> · <code>NotInitialized</code> · <code>ZeroAddress</code> · <code>ZeroAmount</code> · <code>CapExceeded</code> · <code>InsufficientShares</code> · <code>TooSoon</code> · <code>InRange</code> · <code>NoPosition</code> · <code>SlippageExceeded</code> · <code>AssetNotInPool</code> · <code>BadPolicy</code> · <code>StaleOracle</code> · <code>PriceOutOfBand</code> · <code>VaultExists</code> · <code>AlreadyReferred</code> · <code>SelfReferral</code> · <code>NothingToClaim</code></p>
+    <h4>Events</h4>
+    <p><code>Deposit</code> · <code>Withdraw</code> · <code>Deployed</code> · <code>Harvested</code> · <code>Rebalanced</code> · <code>VaultCreated</code> · <code>ReferrerSet</code> · <code>FeeTaken</code> · <code>Claimed</code> · plus ERC-20 <code>Transfer</code> and <code>Approval</code></p>
+
+    <hr>
+    <p style="color:var(--muted);font-size:13.5px">Business Source License 1.1 for everything in <code>src/</code>; scripts and tests are MIT. Source: <a href="https://github.com/caliper383-spec/Caliper">github.com/caliper383-spec/Caliper</a>.</p>
+
+    <footer>
+      <span>Caliper · <a href="https://www.caliper.finance">caliper.finance</a></span>
+      <span>No owner · No upgrade path · No admin keys</span>
+    </footer>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.min.js"></script>
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    securityLevel: 'strict',
+    theme: 'base',
+    fontFamily: "'IBM Plex Mono', ui-monospace, monospace",
+    themeVariables: {
+      darkMode: true,
+      background: '#12171A',
+      primaryColor: '#171D21',
+      primaryTextColor: '#E7EDEB',
+      primaryBorderColor: '#3A4348',
+      secondaryColor: '#12171A',
+      tertiaryColor: '#0B0F12',
+      lineColor: '#87918F',
+      textColor: '#E7EDEB',
+      mainBkg: '#171D21',
+      nodeBorder: '#3A4348',
+      clusterBkg: '#0B0F12',
+      clusterBorder: '#3A4348',
+      edgeLabelBackground: '#0B0F12',
+      labelBoxBorderColor: '#3A4348',
+      actorBkg: '#171D21',
+      actorBorder: '#84A2FF',
+      actorTextColor: '#E7EDEB',
+      actorLineColor: '#3A4348',
+      signalColor: '#87918F',
+      signalTextColor: '#E7EDEB',
+      sequenceNumberColor: '#0B0F12',
+      noteBkgColor: '#12171A',
+      noteBorderColor: '#84A2FF',
+      noteTextColor: '#87918F',
+      loopTextColor: '#E7EDEB'
+    },
+    flowchart: { curve: 'basis', padding: 14, useMaxWidth: true },
+    sequence: { useMaxWidth: true, mirrorActors: false, actorMargin: 46, width: 150 }
+  });
+
+  // mobile contents toggle
+  var aside = document.querySelector('aside'), toc = document.getElementById('toc');
+  toc.addEventListener('click', function () {
+    var open = aside.classList.toggle('open');
+    toc.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+  document.getElementById('nav').addEventListener('click', function (e) {
+    if (e.target.tagName === 'A') { aside.classList.remove('open'); toc.setAttribute('aria-expanded','false'); }
+  });
+
+  // scrollspy
+  var links = Array.prototype.slice.call(document.querySelectorAll('#nav a'));
+  var sections = links.map(function (a) { return document.querySelector(a.getAttribute('href')); });
+  function spy() {
+    var i, best = 0;
+    for (i = 0; i < sections.length; i++) {
+      if (sections[i] && sections[i].getBoundingClientRect().top <= 110) best = i;
+    }
+    links.forEach(function (a, n) { a.classList.toggle('on', n === best); });
+  }
+  window.addEventListener('scroll', spy, { passive: true });
+  spy();
+</script>
+</body>
+</html>
