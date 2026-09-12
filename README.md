@@ -24,7 +24,7 @@
 Deposit one token. The vault mints a concentrated Uniswap v3 position between bounds set
 by policy, harvests its trading fees, and re-centres it when price leaves the range.
 
-<img src="docs/img/how-it-works.webp" alt="One token in, a hedged position out — deposit, mint, hedge, re-centre" width="100%">
+<img src="docs/img/flow.webp" alt="One token in, a hedged position out — deposit, mint, hedge, re-centre" width="100%">
 
 ## Status
 
