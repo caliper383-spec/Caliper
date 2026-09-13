@@ -33,9 +33,16 @@ policy, harvests its trading fees, and re-centres it when price leaves the range
 [Contracts](#contract-reference) ·
 [Security](#security-model) ·
 [Fees](#fees) ·
+[Token](#token) ·
 [Deployment](#live-deployment) ·
 [Quickstart](#quickstart) ·
 [Roadmap](#roadmap)
+
+<br>
+
+**Token contract**
+
+`0xF9A3F7CA81629c8Ae268CBd2C7B37a25cc48059d`
 
 </div>
 
@@ -284,6 +291,15 @@ What bounds the system instead:
 | Referral | **20%** of the protocol cut (`REFERRAL_BPS = 2_000`) | The `FeeRouter` inflow, if the account has a referrer. |
 | Keeper bounty | `policy.bountyBps`, **≤ 300 bps** | The collected amount, paid to whoever spent the gas. |
 | Remainder | everything else | Stays in the vault; `deploy()` compounds it back into the range. |
+
+## Token
+
+| | |
+|---|---|
+| Token contract | `0xF9A3F7CA81629c8Ae268CBd2C7B37a25cc48059d` |
+
+The address above is the token contract. The contracts listed below are the vault stack,
+which is separate from it and deployed on the testnet.
 
 ## Live deployment
 
